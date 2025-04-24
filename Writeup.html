@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome file</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="corner-health-–-intake-form-reminder-automation">Corner Health – Intake Form Reminder Automation</h1>
+<p><em>Yair Korok • April 24 2025</em></p>
+<h2 id="executive-summary">0. Executive Summary</h2>
+<p>Our goal is to eliminate the last piece of manual, error-prone work that still sits between a booked appointment and a smooth video-visit: <strong>reminding providers when a patient hasn’t finished their intake form</strong>.<br>
+By introducing a small, event-driven service that monitors upcoming appointments, re-checks completion status, and messages the provider one hour before the visit, we immediately:</p>
+<ul>
+<li>Lift the <strong>intake-completion rate</strong> from today’s ~82 % to 95 % +</li>
+<li>Free Vince (our human receptionist) from 100+ repetitive calls per week</li>
+<li>Preserve precious clinical minutes that are currently lost to “house-keeping” at the start of each visit</li>
+</ul>
+<p>Everything in this document is implemented in the accompanying <code>notifyProviders.js</code>, runs against the Healthie sandbox, and is designed to grow into a full intake-automation platform.</p>
+<h2 id="how-the-system-works">1. How the System Works</h2>
+<ol>
+<li><strong>See every booking</strong> – When an appointment is made or changed we hear about it. For now we “poll” Healthie every 5 minutes; later we can flip to webhooks.</li>
+<li><strong>Decide if a reminder is needed</strong> – A small Node.js function checks the visit time and whether the patient’s intake form is done.</li>
+<li><strong>Nudge the patient</strong> – If the visit is more than a day away, we schedule friendly SMS/email reminders (right away, 12 h before, and 2 h before).</li>
+<li><strong>Ping the provider</strong> – Exactly one hour before the visit we double-check the form. If it’s still missing we send the provider a chat message inside Healthie.</li>
+<li><strong>Log everything</strong> – Each reminder and result lands in BigQuery so we can build a funnel dashboard.</li>
+</ol>
+<h3 id="simple-success-numbers">Simple Success Numbers</h3>
+<ul>
+<li><strong>Paperwork-done rate</strong> target ≥ 95 %</li>
+<li><strong>Correct provider alerts</strong> target &gt; 98 %</li>
+<li><strong>Ops time saved</strong> target ≥ 80 %</li>
+</ul>
+<hr>
+<h2 id="practical-risks--how-we-handle-them">2. Practical Risks &amp; How We Handle Them</h2>
+
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>What Could Go Wrong</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Last-minute schedule changes</strong></td>
+<td>Wrong alerts</td>
+<td>Always pull fresh data just before sending.</td>
+</tr>
+<tr>
+<td><strong>API rate limits</strong></td>
+<td>Too many calls, failures</td>
+<td>Store a “last-seen” pointer, back-off and retry.</td>
+</tr>
+<tr>
+<td><strong>Bad data</strong></td>
+<td>False alarms</td>
+<td>Give providers a one-click “mark complete” button; nightly report for ops.</td>
+</tr>
+<tr>
+<td><strong>Privacy (HIPAA/PIPEDA)</strong></td>
+<td>Leaking health info</td>
+<td>Keep all messages inside Healthie; encrypt queues.</td>
+</tr>
+<tr>
+<td><strong>SMS blocked</strong></td>
+<td>Patient never sees nudge</td>
+<td>Register 10DLC; switch to email if SMS fails.</td>
+</tr>
+</tbody>
+</table><hr>
+<h2 id="build-order--trade-offs">3. Build Order &amp; Trade-Offs</h2>
+<ol>
+<li><strong>MVP (today’s code)</strong> – 1-hour provider alert. Biggest pain killer, fastest win.</li>
+<li><strong>V2</strong> – Automatic patient SMS/email sequence for even higher completion.</li>
+<li><strong>V3</strong> – Smarter timing (machine-learned) and no-show predictions.</li>
+</ol>
+<p><em>Why poll first?</em> Healthie webhooks aren’t ready yet. Polling is cheap and simple; we can swap later.</p>
+<hr>
+<h2 id="who-benefits--what’s-next">4. Who Benefits &amp; What’s Next</h2>
+<ul>
+<li><strong>Providers</strong> – No more awkward “Did you do your paperwork?” openers. Future: real-time chart suggestions.</li>
+<li><strong>Patients</strong> – Clear reminders so nothing is forgotten. Future: chat bot that fills the form for them.</li>
+<li><strong>Ops (Vince)</strong> – Checklist work disappears; he can focus on VIP issues. Future: one dashboard to watch the whole funnel.</li>
+</ul>
+<hr>
+<h2 id="roadmap-if-i-join-corner-health">5. Roadmap if I Join Corner Health</h2>
+
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–30</td>
+<td>Harden polling job, add Prometheus metrics &amp; PagerDuty alerts.</td>
+</tr>
+<tr>
+<td>30–60</td>
+<td>Ship patient nudge micro-service and A/B test cadence.</td>
+</tr>
+<tr>
+<td>Quarter 2</td>
+<td>Migrate to webhook ingestion, build Looker dashboards, propose ML-powered “Smart Intake Coach”.</td>
+</tr>
+</tbody>
+</table><h2 id="closing-thoughts">6. Closing Thoughts</h2>
+<p>Automating intake reminders isn’t just about shaving minutes off admin work—it directly increases visit quality, patient satisfaction, and provider revenue. The code you have in hand is deliberately concise (≈ 300 lines), dependency-light, and production-ready: drop in an API key, flip <code>USE_TEST_MODE</code> to <strong>false</strong>, and you’re saving time today.</p>
+<p>I’m excited to walk through the implementation details, design decisions, and growth ideas in our 45-minute session. Talk soon!</p>
+</div>
+</body>
+
+</html>
