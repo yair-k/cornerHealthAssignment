@@ -1,0 +1,2 @@
+# cornerHealthAssignment
+ Automated texts
